@@ -25,12 +25,12 @@ end
 
 Yao.nactive(reg::IBMQReg) = reg.nactive
 Yao.nqubits(reg::IBMQReg) = reg.nqubits
-# Yao.device(reg::IBMQReg) = reg.device
 
-function apply!(reg::IBMQReg, qc::Array{ChainBlock{N}}) where N
+function YaoBlocks.apply!(reg::IBMQReg, qc::Array{ChainBlock{N}}) where N
     qobj = yaotoqobj(qc, reg.device)
     job = run(reg, qobj)
 end
+
 """
 Login method
 """
@@ -65,7 +65,7 @@ Get backends info
 function createreg(user::IBMQUser)
     id = user.id
     url_back = "https://api.quantum-computing.ibm.com/api/Network/ibm-q/Groups/open/Projects/main/devices/v/1?access_token=$(id)"
-    println("Fetching Backends...")
+    print("Fetching Backends...")
     response_back = HTTP.get(url_back)
     if response_back.status == 200
         println("✔")
