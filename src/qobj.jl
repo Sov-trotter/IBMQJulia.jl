@@ -75,11 +75,11 @@ end
 function generate_inst(blk::ControlBlock)
     gate = blk.content
     if gate isa XGate
-        nm = "cx"
+        nm = "x"
     elseif gate isa YGate
-        nm = "cy"
+        nm = "y"
     elseif gate isa ZGate
-        nm = "cz"
+        nm = "z"
     elseif gate isa ShiftGate
         nm = "cu1"
         angle = gate.theta  #use Base.propertynames here
