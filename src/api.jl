@@ -27,7 +27,7 @@ Yao.nactive(reg::IBMQReg) = reg.nactive
 Yao.nqubits(reg::IBMQReg) = reg.nqubits
 
 function YaoBlocks.apply!(reg::IBMQReg, qc::Array{ChainBlock{N}}) where N
-    qobj = yaotoqobj(qc, reg.device)
+    qobj = yaotoqobjv2(qc, reg.device)
     job = run(reg, qobj)
 end
 
