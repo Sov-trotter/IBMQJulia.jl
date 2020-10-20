@@ -1,3 +1,6 @@
+#todo variational gate correction stuff
+# add methods for h and rz conversions 
+# cleanup multiple dispatch
 function yaotoqobjv2(qc::Array{ChainBlock{N}}, device::String; nshots=1024) where N
     nslots = 1
     main_header = Dict("description"=>"Set of Experiments 1", "backend_name" => "$(device)")
@@ -25,7 +28,7 @@ function generate_instv2(qc_simpl::ChainBlock)
     for block in subblocks(qc_simpl)
         # push!(inst, generate_instv2(block))
         if block isa ChainBlock
-            push!(inst, generate_instv2.(block)...)
+            append!(inst, generate_instv2(block))
         else
             push!(inst, generate_instv2(block))
         end
