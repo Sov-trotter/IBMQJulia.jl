@@ -26,11 +26,15 @@ end
 function generate_instv2(qc_simpl::ChainBlock)
     inst = []
     for block in subblocks(qc_simpl)
-        # push!(inst, generate_instv2(block))
+        i = generate_instv2(block)
         if block isa ChainBlock
-            append!(inst, generate_instv2(block))
+            if i isa Array{Array}                             # for nested chains
+                push!(inst, Iterators.flatten(i)...)  #generalize this to loop till we get a Array{Dict} 
+            else
+                append!(inst, i)
+            end
         else
-            push!(inst, generate_instv2(block))
+            push!(inst, i)
         end
     end
     return inst
@@ -43,6 +47,15 @@ end
 
 function generate_instv2(blk::ControlBlock{N,GT,C}) where {N,GT,C}
 	generate_instv2(blk.content, blk.locs, blk.ctrl_locs)
+end
+
+
+function generate_instv2(blk::ChainBlock, locs::Array) 
+    ins = []
+    for sub_blk in subblocks(blk)
+        push!(ins, generate_instv2(sub_blk, locs))
+    end
+    return ins
 end
 
 generate_instv2(::HGate, locs) = Dict("name"=>"h", "qubits"=>locs) 
