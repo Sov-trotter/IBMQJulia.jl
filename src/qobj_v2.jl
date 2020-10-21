@@ -1,4 +1,4 @@
-#todo variational gate correction stuff
+#todo variational gate correction stuff :Done
 # add methods for h and rz conversions 
 # cleanup multiple dispatch
 function yaotoqobjv2(qc::Array{ChainBlock{N}}, device::String; nshots=1024) where N
@@ -58,7 +58,9 @@ function generate_instv2(blk::ChainBlock, locs::Array)
     return ins
 end
 
-generate_instv2(::HGate, locs) = Dict("name"=>"h", "qubits"=>locs) 
+# IBMQ Chip only supports ["id", "u1", "u2", "u3", "cx"]
+# Conversions implemented for H, RX, RY, RZ 
+generate_instv2(::HGate, locs) = Dict("name"=>"u2", "qubits"=>locs, "params"=>[0, π]) 
 generate_instv2(::I2Gate, locs) = Dict("name"=>"id", "qubits"=>locs) 
 generate_instv2(::TGate, locs) = Dict("name"=>"t", "qubits"=>locs) 
 generate_instv2(::SWAPGate, locs) = Dict("name"=>"swap", "qubits"=>locs) 
@@ -74,9 +76,9 @@ generate_instv2(::XGate, locs::Tuple, ctrl_locs::Tuple) = Dict("name"=>"cx", "qu
 generate_instv2(::YGate, locs::Tuple, ctrl_locs::Tuple) = Dict("name"=>"cy", "qubits"=>[locs..., ctrl_locs...])
 generate_instv2(::ZGate, locs::Tuple, ctrl_locs::Tuple) = Dict("name"=>"cz", "qubits"=>[locs..., ctrl_locs...])
 
-generate_instv2(b::RotationGate{1, T, XGate}, locs) where T = Dict("name"=>"rx", "qubits"=>locs, "params"=>[b.theta])
-generate_instv2(b::RotationGate{1, T, YGate}, locs) where T = Dict("name"=>"ry", "qubits"=>locs, "params"=>[b.theta])
-generate_instv2(b::RotationGate{1, T, ZGate}, locs) where T = Dict("name"=>"rz", "qubits"=>locs, "params"=>[b.theta])
+generate_instv2(b::RotationGate{1, T, XGate}, locs) where T = Dict("name"=>"u3", "qubits"=>locs, "params"=>[b.theta, -π/2, π/2])
+generate_instv2(b::RotationGate{1, T, YGate}, locs) where T = Dict("name"=>"u2", "qubits"=>locs, "params"=>[b.theta, 0, 0])
+generate_instv2(b::RotationGate{1, T, ZGate}, locs) where T = Dict("name"=>"u1", "qubits"=>locs, "params"=>[b.theta])
 
 function basicstyle(blk::AbstractBlock)
 	YaoBlocks.Optimise.simplify(blk, rules=[YaoBlocks.Optimise.to_basictypes])
