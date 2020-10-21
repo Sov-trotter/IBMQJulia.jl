@@ -49,7 +49,6 @@ function generate_inst(blk::ControlBlock{N,GT,C}) where {N,GT,C}
 	generate_instv2(blk.content, blk.locs, blk.ctrl_locs)
 end
 
-
 function generate_inst(blk::ChainBlock, locs::Array) 
     ins = []
     for sub_blk in subblocks(blk)

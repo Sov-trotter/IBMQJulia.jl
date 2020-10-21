@@ -1,5 +1,4 @@
 using HTTP, JSON
-using Yao, YaoBlocks
 const headers = (("content-type", "application/json"), ("Accept", "application/json"))
 
 struct IBMQUser #store other info here
