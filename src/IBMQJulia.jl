@@ -1,7 +1,7 @@
 module IBMQJulia
 
 include("api.jl")
-include("qobj_v2.jl")
+include("qobj.jl")
 
 export authenticate, createreg, status, getresult
 end
