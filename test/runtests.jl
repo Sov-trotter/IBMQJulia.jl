@@ -1,4 +1,5 @@
 using IBMQJulia
+using SimpleMock
 using Yao, YaoBlocks
 using Test
 

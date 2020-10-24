@@ -1,4 +1,3 @@
-using SimpleMock    
 @testset "Login" begin
     @test user isa IBMQJulia.IBMQUser 
     @test user.id isa String
