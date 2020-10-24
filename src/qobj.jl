@@ -1,7 +1,5 @@
 export generate_inst, inst2qbir
-#todo variational gate correction stuff :Done
-# add methods for h and rz conversions 
-# cleanup multiple dispatch
+
 function yaotoqobj(qc::Array{<:AbstractBlock{N}}, device::String; nshots=1024, nslots=1) where N
     main_header = Dict("description"=>"Set of Experiments 1", "backend_name" => "$(device)")
     main_config = Dict("shots"=>nshots, "memory_slots"=>nslots, "init_qubits"=> true)

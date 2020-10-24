@@ -2,7 +2,7 @@
 using YaoExtensions, IBMQJulia, Yao, Test
 
 @testset "QFT" begin
-    for i in [1,8]
+    for i in [2, 4, 5, 7, 8]
         q = qft_circuit(i)
         qobj = IBMQJulia.yaotoqobj([q], "foo_device")
         exp_1 = qobj.data["experiments"] 
@@ -14,9 +14,6 @@ using YaoExtensions, IBMQJulia, Yao, Test
         @test length(ins) == i*(i+1)/2
         for j in ins
             @test j isa Dict{String, Any} 
-            # test individual blocks here 
-            # use the YaoBlocks.gate count method for verification/a method synonymous to it can be added in this package also
-
         end
     end
     c = qft_circuit(4)
@@ -54,7 +51,6 @@ end
     @test ins isa Array{Any,1}
     for j in ins
         @test j isa Dict{String,Any} 
-        # test individual blocks here 
     end
     c = build_circuit(4, 1, [1=>2, 2=>3, 3=>4])
     inst = generate_inst(c)
@@ -63,7 +59,7 @@ end
 end
 
 @testset "Variational Quantum Eigen Solver" begin
-    for n in [3, 8]
+    for n in [3, 6, 7, 8, 9]
         circuit = dispatch!(variational_circuit(n, n+1),:random)
         qobj = IBMQJulia.yaotoqobj([circuit], "foo_device")
         exp_1 = qobj.data["experiments"] 
@@ -74,9 +70,7 @@ end
         @test ins isa Array{Any,1}
         for j in ins
             @test j isa Dict{String,Any} 
-            # test individual blocks here 
         end
-        # gatecount(circuit)
     end
     c = dispatch!(variational_circuit(4, 5), :random)
     inst = generate_inst(c)

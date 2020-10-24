@@ -6,7 +6,7 @@ using Test
 # todo add tests wrt standard circuits(qft etc) to confirm that qobj is correct
 # verify the results
 qc = chain(1, put(1=>I2))
-test_token = "4b108e35df658648486a3a66c3ccf1e66cd3005c97ab2016c9b1ceeec64802c7052325952dd02a01b73ca6e28613c36b7e87c0a854ebae1dc434a07fcfcc7c7b"  
+test_token = "8e87a83bbe4f5ad0aa953094fb8df853b07b2a86dadf010261eef2a65cd524df29e5bc38bbe2f8064155226bdfb6dcaecc8e3a6a029e402c8c7389ec0cef3574"  
 user = authenticate(test_token)   
 
 mock(readline => Mock(() -> "1")) do _
