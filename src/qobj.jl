@@ -42,17 +42,18 @@ end
 
 function generate_inst(blk::PutBlock{N,M}) where {N,M}
 	locs = [blk.locs...]
-	generate_instv2(blk.content, locs)
+	generate_inst(blk.content, locs)
 end
 
 function generate_inst(blk::ControlBlock{N,GT,C}) where {N,GT,C}
-	generate_instv2(blk.content, blk.locs, blk.ctrl_locs)
+  findfirst(!=(0),blk.ctrl_config) == nothing && error("Inverse Control used in Control gate context") 
+	generate_inst(blk.content, blk.locs, blk.ctrl_locs)
 end
 
 function generate_inst(blk::ChainBlock, locs::Array) 
     ins = []
     for sub_blk in subblocks(blk)
-        push!(ins, generate_instv2(sub_blk, locs))
+        push!(ins, generate_inst(sub_blk, locs))
     end
     return ins
 end
