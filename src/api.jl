@@ -26,7 +26,7 @@ Yao.nactive(reg::IBMQReg) = reg.nactive
 Yao.nqubits(reg::IBMQReg) = reg.nqubits
 
 function YaoBlocks.apply!(reg::IBMQReg, qc::Array{ChainBlock{N}}) where N
-    qobj = yaotoqobjv2(qc, reg.device)
+    qobj = yaotoqobj(qc, reg.device)
     job = run(reg, qobj)
 end
 
@@ -89,7 +89,7 @@ function createreg(user::IBMQUser)
         println("basis_gates=$(device_info["basis_gates"])")
         println("Confirm? (Y/N)")
         conf = readline()
-        if conf == "Y" || conf == "y"
+        if conf !== "N" || conf !== "n"
             return IBMQReg(id, id_back[parse(Int, backend_no)], n_qubits, n_qubits)
         else
             confirm = false

@@ -34,7 +34,11 @@ function generate_inst(qc_simpl::ChainBlock)
                 append!(inst, i)
             end
         else
-            push!(inst, i)
+            if i isa Array                             # for nested chains
+                append!(inst, i)  
+            else
+                push!(inst, i)
+            end
         end
     end
     return inst
