@@ -1,5 +1,4 @@
 using HTTP, JSON
-using Yao, YaoBlocks
 const headers = (("content-type", "application/json"), ("Accept", "application/json"))
 
 struct IBMQUser #store other info here
@@ -27,7 +26,7 @@ Yao.nactive(reg::IBMQReg) = reg.nactive
 Yao.nqubits(reg::IBMQReg) = reg.nqubits
 
 function YaoBlocks.apply!(reg::IBMQReg, qc::Array{ChainBlock{N}}) where N
-    qobj = yaotoqobj(qc, reg.device)
+    qobj = yaotoqobjv2(qc, reg.device)
     job = run(reg, qobj)
 end
 
@@ -185,64 +184,3 @@ function getresult(job::Job)
         res = response_parsed["results"]
     end
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# # check if device is online
-# function is_online(id_back::Array, device_name::String)
-#     return device in id_back 
-# end
-
-# #  info (dict): dictionary sent by the backend containing the code to run 
-# # or we can have it has the number of qubits in our circuit
-# function can_run_experiment(info::Dict, response_back_parsed, device::Dict)
-#     info['nq'] <= device["n_qubits"] ? true : false
-# end
-# json = """{
-#     "qobj_id": "exp123_072018",
-#     "schema_version": "1.0.0",
-#     "type": "QASM",
-#     "header": {
-#         "description": "Set of Experiments 1",
-#         "backend_name": "ibmq_qasm_simulator"},
-#     "config": {
-#         "shots": 1024,
-#         "memory_slots": 1,
-#         "init_qubits": true
-#         },
-#     "experiments": [
-#         {
-#         "header": {
-#             "memory_slots": 1,
-#             "n_qubits": 2,
-#             "clbit_labels": [["c1", 0]],
-#             "qubit_labels": [null,["q", 0],["q",1]]
-#             },
-#         "config": {},
-#         "instructions": [
-#             {"name": "h", "qubits": [1]},
-#             {"name": "id", "qubits": [2]},
-#             {"name": "s", "qubits": [1]}
-#             ]
-#         }
-#         ]    
-# }"""
