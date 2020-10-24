@@ -15,7 +15,9 @@ end
 qc = chain(1, put(1=>I2))
 job = apply!(reg, [qc])
 stat = status(job)
-res = getresult(job)
+if stat == "COMPLETED"
+    res = getresult(job)
+end
 
 @testset "IBMQJulia.jl" begin
     @testset "API" begin

@@ -18,7 +18,7 @@ end
 end
 
 @testset "status" begin
-    @test stat == "COMPLETED" || stat == "RUNNING" || stat = "QUEUED"
+    @test stat == "COMPLETED" || stat == "RUNNING" || stat == "QUEUED"
 end
 
 if stat == "COMPLETED"
