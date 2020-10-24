@@ -17,7 +17,7 @@ function generate_experiment(qc::ChainBlock)
     nslots=1
     c_label = [["c", i] for i in 0:n_classical_reg-1]
     q_label = [["q", i] for i in 0:n_qubits-1]
-    exp_inst = generate_instv2(qc_simpl)
+    exp_inst = generate_inst(qc_simpl)
     exp_header = Dict("memory_slots"=>nslots, "n_qubits"=>n_qubits, "clbit_labels"=>c_label, "qubit_labels"=>q_label)
     experiment = Dict("header"=>exp_header, "config"=>Dict(), "instructions"=>exp_inst)
     return experiment    
@@ -42,17 +42,17 @@ end
 
 function generate_inst(blk::PutBlock{N,M}) where {N,M}
 	locs = [blk.locs...]
-	generate_instv2(blk.content, locs)
+	generate_inst(blk.content, locs)
 end
 
 function generate_inst(blk::ControlBlock{N,GT,C}) where {N,GT,C}
-	generate_instv2(blk.content, blk.locs, blk.ctrl_locs)
+	generate_inst(blk.content, blk.locs, blk.ctrl_locs)
 end
 
 function generate_inst(blk::ChainBlock, locs::Array) 
     ins = []
     for sub_blk in subblocks(blk)
-        push!(ins, generate_instv2(sub_blk, locs))
+        push!(ins, generate_inst(sub_blk, locs))
     end
     return ins
 end
