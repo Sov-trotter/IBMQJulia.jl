@@ -51,7 +51,7 @@ end
 
 function generate_inst(blk::ControlBlock{N,GT,C}) where {N,GT,C}
     findfirst(!=(0),blk.ctrl_config) == nothing && error("Inverse Control used in Control gate context") 
-	generate_inst(blk.content, blk.locs, blk.ctrl_locs)
+	generate_inst(blk.content, blk.ctrl_locs, blk.locs)
 end
 
 function generate_inst(blk::ChainBlock, locs::Array) 
@@ -70,15 +70,15 @@ generate_inst(::TGate, locs) = Dict("name"=>"t", "qubits"=>locs)
 generate_inst(::SWAPGate, locs) = Dict("name"=>"swap", "qubits"=>locs) 
 generate_inst(::Measure, locs) = Dict("name"=>"measure", "qubits"=>locs, "memory"=>[0])# memory:  List of memory slots in which to store the measurement results (mustbe the same length as qubits).  
 
-generate_inst(b::ShiftGate, locs, ctrl_locs) = Dict("name"=>"cu1", "qubits"=>[locs..., ctrl_locs...], "params"=>[b.theta])
+generate_inst(b::ShiftGate, ctrl_locs, locs) = Dict("name"=>"cu1", "qubits"=>[locs..., ctrl_locs...], "params"=>[b.theta])
 
 generate_inst(::XGate, locs::Array) = Dict("name"=>"x", "qubits"=>locs)
 generate_inst(::YGate, locs::Array) = Dict("name"=>"y", "qubits"=>locs)
 generate_inst(::ZGate, locs::Array) = Dict("name"=>"z", "qubits"=>locs)
 
-generate_inst(::XGate, locs::Tuple, ctrl_locs::Tuple) = Dict("name"=>"cx", "qubits"=>[locs..., ctrl_locs...])
-generate_inst(::YGate, locs::Tuple, ctrl_locs::Tuple) = Dict("name"=>"cy", "qubits"=>[locs..., ctrl_locs...])
-generate_inst(::ZGate, locs::Tuple, ctrl_locs::Tuple) = Dict("name"=>"cz", "qubits"=>[locs..., ctrl_locs...])
+generate_inst(::XGate, ctrl_locs::Tuple, locs::Tuple) = Dict("name"=>"cx", "qubits"=>[ctrl_locs..., locs...])
+generate_inst(::YGate, ctrl_locs::Tuple, locs::Tuple) = Dict("name"=>"cy", "qubits"=>[ctrl_locs..., locs...])
+generate_inst(::ZGate, ctrl_locs::Tuple, locs::Tuple) = Dict("name"=>"cz", "qubits"=>[ctrl_locs..., locs...])
 
 generate_inst(b::RotationGate{1, T, XGate}, locs) where T = Dict("name"=>"u3", "qubits"=>locs, "params"=>[b.theta, -π/2, π/2])
 generate_inst(b::RotationGate{1, T, YGate}, locs) where T = Dict("name"=>"u2", "qubits"=>locs, "params"=>[b.theta, 0, 0])
@@ -87,3 +87,4 @@ generate_inst(b::RotationGate{1, T, ZGate}, locs) where T = Dict("name"=>"u1", "
 function basicstyle(blk::AbstractBlock)
 	YaoBlocks.Optimise.simplify(blk, rules=[YaoBlocks.Optimise.to_basictypes])
 end
+
