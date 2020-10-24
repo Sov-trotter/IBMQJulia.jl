@@ -14,6 +14,7 @@ mock(readline => Mock(() -> "1")) do _
 end
 qc = chain(1, put(1=>I2))
 job = apply!(reg, [qc])
+sleep(10)
 stat = status(job)
 if stat == "COMPLETED"
     res = getresult(job)
