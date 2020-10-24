@@ -2,8 +2,7 @@ export generate_inst, inst2qbir
 #todo variational gate correction stuff :Done
 # add methods for h and rz conversions 
 # cleanup multiple dispatch
-function yaotoqobj(qc::Array{ChainBlock{N}}, device::String; nshots=1024) where N
-    nslots = 1
+function yaotoqobj(qc::Array{<:AbstractBlock{N}}, device::String; nshots=1024, nslots=1) where N
     main_header = Dict("description"=>"Set of Experiments 1", "backend_name" => "$(device)")
     main_config = Dict("shots"=>nshots, "memory_slots"=>nslots, "init_qubits"=> true)
     experiments = collect(generate_experiment(i) for i in qc)
@@ -11,21 +10,18 @@ function yaotoqobj(qc::Array{ChainBlock{N}}, device::String; nshots=1024) where 
     Qobj(data)
 end
 
-function generate_experiment(qc::ChainBlock)
-    n_qubits = nqubits(qc)
-    n_classical_reg = 2 
-    nslots=1
+function generate_experiment(qc::AbstractBlock{N}, n_classical_reg=2, nslots=1) where N
     c_label = [["c", i] for i in 0:n_classical_reg-1]
-    q_label = [["q", i] for i in 0:n_qubits-1]
+    q_label = [["q", i] for i in 0:N-1]
     exp_inst = generate_inst(qc)
-    exp_header = Dict("memory_slots"=>nslots, "n_qubits"=>n_qubits, "clbit_labels"=>c_label, "qubit_labels"=>q_label)
+    exp_header = Dict("memory_slots"=>nslots, "n_qubits"=>N, "clbit_labels"=>c_label, "qubit_labels"=>q_label)
     experiment = Dict("header"=>exp_header, "config"=>Dict(), "instructions"=>exp_inst)
     return experiment    
 end
 
 function generate_inst(qc_simpl::AbstractBlock{N}) where N
     inst = []
-    generate_inst!(inst, basicstyle(qc_simpl), [1:N...], Int[])
+    generate_inst!(inst, basicstyle(qc_simpl), [0:N-1...], Int[])
     return inst
 end
 
@@ -46,11 +42,11 @@ end
 
 function generate_inst!(inst, m::Measure{N}, locs, controls) where N
     # memory:  List of memory slots in which to store the measurement results (mustbe the same length as qubits).  
-    mlocs = sublocs(n.locations isa AllLocs ? [1:N...] : [n.locations...], locs)
+    mlocs = sublocs(m.locations isa AllLocs ? [1:N...] : [m.locations...], locs)
     (m.operator isa ComputationalBasis) || error("measuring an operator is not supported")
     (m.postprocess isa NoPostProcess) || error("postprocessing is not supported")
     (length(controls) == 0) || error("controlled measure is not supported")
-    push!(inst, Dict("name"=>"measure", "qubits"=>mlocs .- 1, "memory"=>zeros(length(mlocs))))
+    push!(inst, Dict("name"=>"measure", "qubits"=>mlocs, "memory"=>zeros(length(mlocs))))
 end
 
 # IBMQ Chip only supports ["id", "u1", "u2", "u3", "cx"]
@@ -59,7 +55,7 @@ for (GT, NAME, MAXC) in [(:XGate, "x", 2), (:YGate, "y", 2), (:ZGate, "z", 2),
                          (:I2Gate, "id", 0), (:TGate, "t", 0), (:SWAPGate, "swap", 0)]
     @eval function generate_inst!(inst, ::$GT, locs, controls)
         if length(controls) <= $MAXC
-            push!(inst, Dict("name"=>"c"^(length(controls))*$NAME, "qubits"=>[controls..., locs...] .- 1))
+            push!(inst, Dict("name"=>"c"^(length(controls))*$NAME, "qubits"=>[controls..., locs...]))
         else
             error("too many control bits!")
         end
@@ -75,7 +71,7 @@ for (GT, NAME, PARAMS, MAXC) in [(:(RotationGate{1, T, XGate} where T), "u3", :(
                           ]
     @eval function generate_inst!(inst, b::$GT, locs, controls)
         if length(controls) <= $MAXC
-            push!(inst, Dict("name"=>"c"^(length(controls))*$NAME, "qubits"=>[controls..., locs...] .- 1, "params"=>$PARAMS))
+            push!(inst, Dict("name"=>"c"^(length(controls))*$NAME, "qubits"=>[controls..., locs...], "params"=>$PARAMS))
         else
             error("too many control bits! got $controls (length > $($(MAXC)))")
         end
