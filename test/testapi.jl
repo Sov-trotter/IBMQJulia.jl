@@ -18,12 +18,14 @@ end
 end
 
 @testset "status" begin
-    @test stat == "COMPLETED" || stat == "RUNNING"
+    @test stat == "COMPLETED" || stat == "RUNNING" || stat = "QUEUED"
 end
 
-@testset "result" begin
-    @test res isa Array{Any, 1}
-    @test res[1] isa Dict{String, Any}
-    @test res[1]["status"] == "DONE"
-    @test res[1]["success"] == true
+if stat == "COMPLETED"
+    @testset "result" begin
+        @test res isa Array{Any, 1}
+        @test res[1] isa Dict{String, Any}
+        @test res[1]["status"] == "DONE"
+        @test res[1]["success"] == true
+    end
 end
