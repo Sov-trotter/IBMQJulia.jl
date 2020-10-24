@@ -3,18 +3,18 @@ export U1, U2, U3
 # Single qubit unitary gates
 # https://github.com/Qiskit/openqasm/blob/master/examples/generic/qelib1.inc
 # 1-parameter 0-pulse single qubit gate
-mutable struct U1{T<:Number} <: PrimitiveBlock{2}
+mutable struct U1{T<:Number} <: PrimitiveBlock{1}
     lambda::T
 end
 
 # 2-parameter 1-pulse single qubit gate
-mutable struct U2{T<:Number} <: PrimitiveBlock{2}
+mutable struct U2{T<:Number} <: PrimitiveBlock{1}
     phi::T
     lambda::T
 end
 
 # 3-parameter 2-pulse single qubit gate
-mutable struct U3{T<:Number} <: PrimitiveBlock{3}
+mutable struct U3{T<:Number} <: PrimitiveBlock{1}
     theta::T
     phi::T
     lambda::T

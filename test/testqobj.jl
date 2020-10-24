@@ -1,8 +1,8 @@
 # https://tutorials.yaoquantum.org/dev/
-using YaoExtensions
+using YaoExtensions, IBMQJulia, Yao, Test
 
 @testset "QFT" begin
-    for i in 1:10
+    for i in [1,8]
         q = qft_circuit(i)
         qobj = IBMQJulia.yaotoqobj([q], "foo_device")
         exp_1 = qobj.data["experiments"] 
@@ -19,6 +19,10 @@ using YaoExtensions
 
         end
     end
+    c = qft_circuit(4)
+    inst = generate_inst(c)
+    c2 = inst |> inst2qbir
+    @test operator_fidelity(c, c2) ≈ 1
 end
 
 @testset "Quantum Circuit Born Machine" begin
@@ -52,10 +56,14 @@ end
         @test j isa Dict{String,Any} 
         # test individual blocks here 
     end
+    c = build_circuit(4, 1, [1=>2, 2=>3, 3=>4])
+    inst = generate_inst(c)
+    c2 = inst |> inst2qbir
+    @test operator_fidelity(c, c2) ≈ 1
 end
 
 @testset "Variational Quantum Eigen Solver" begin
-    for n in 3:10
+    for n in [3, 8]
         circuit = dispatch!(variational_circuit(n, n+1),:random)
         qobj = IBMQJulia.yaotoqobj([circuit], "foo_device")
         exp_1 = qobj.data["experiments"] 
@@ -70,5 +78,9 @@ end
         end
         # gatecount(circuit)
     end
+    c = dispatch!(variational_circuit(4, 5), :random)
+    inst = generate_inst(c)
+    c2 = inst |> inst2qbir
+    @test operator_fidelity(c, c2) ≈ 1
 end
 
