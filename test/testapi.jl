@@ -12,8 +12,8 @@ end
 @testset "job" begin
     @test job isa IBMQJulia.Job
     @test job.reg == reg
-    @test job.data == IBMQJulia.yaotoqobj([qc], "ibmq_qasm_simulator")
     @test job.data isa IBMQJulia.Qobj
+    @test job.data.data["experiments"][1]["instructions"] == IBMQJulia.generate_inst(qc)
     @test job.jobid isa String
 end
 
