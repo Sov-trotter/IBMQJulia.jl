@@ -46,6 +46,7 @@ function generate_inst(blk::PutBlock{N,M}) where {N,M}
 end
 
 function generate_inst(blk::ControlBlock{N,GT,C}) where {N,GT,C}
+    findfirst(!=(0),blk.ctrl_config) == nothing && error("Inverse Control used in Control gate context") 
 	generate_inst(blk.content, blk.locs, blk.ctrl_locs)
 end
 
