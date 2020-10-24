@@ -12,12 +12,12 @@ function yaotoqobj(qc::Array{ChainBlock{N}}, device::String; nshots=1024) where 
 end
 
 function generate_experiment(qc::ChainBlock)
-    n_qubits = nqubits(qc_simpl)
+    n_qubits = nqubits(qc)
     n_classical_reg = 2 
     nslots=1
     c_label = [["c", i] for i in 0:n_classical_reg-1]
     q_label = [["q", i] for i in 0:n_qubits-1]
-    exp_inst = generate_inst(qc_simpl)
+    exp_inst = generate_inst(qc)
     exp_header = Dict("memory_slots"=>nslots, "n_qubits"=>n_qubits, "clbit_labels"=>c_label, "qubit_labels"=>q_label)
     experiment = Dict("header"=>exp_header, "config"=>Dict(), "instructions"=>exp_inst)
     return experiment    
@@ -54,7 +54,6 @@ function generate_inst!(inst, m::Measure{N}, locs, controls) where N
 end
 
 # IBMQ Chip only supports ["id", "u1", "u2", "u3", "cx"]
-
 # x, y, z and control x, y, z, id, t, swap and other primitive gates
 for (GT, NAME, MAXC) in [(:XGate, "x", 2), (:YGate, "y", 2), (:ZGate, "z", 2),
                          (:I2Gate, "id", 0), (:TGate, "t", 0), (:SWAPGate, "swap", 0)]

@@ -1,7 +1,7 @@
 # IBMQJulia
 
-[![Build Status](https://travis-ci.com/Sov-trotter/IBMQJulia.jl.svg?branch=master)](https://travis-ci.com/Sov-trotter/IBMQJulia.jl)
-
+[![Build Status](https://travis-ci.com/Sov-trotter/IBMQJulia.jl.svg?branch=main)](https://travis-ci.com/Sov-trotter/IBMQJulia.jl)
+[![codecov](https://codecov.io/gh/Sov-trotter/IBMQJulia.jl/branch/main/graph/badge.svg?token=1YC48XPQ12)](undefined)
 # Quickstart
 
 ## Login
