@@ -12,7 +12,7 @@ user = authenticate(test_token)
 mock(readline => Mock(() -> "1")) do _
     global reg = createreg(user)
 end
-
+qc = chain(1, put(1=>I2))
 job = apply!(reg, [qc])
 stat = status(job)
 res = getresult(job)

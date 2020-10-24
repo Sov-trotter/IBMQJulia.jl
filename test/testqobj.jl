@@ -6,10 +6,10 @@ using YaoExtensions
         q = qft_circuit(i)
         qobj = IBMQJulia.yaotoqobj([q], "foo_device")
         exp_1 = qobj.data["experiments"] 
-        ins = exp[1]["instructions"]
+        ins = exp_1[1]["instructions"]
         @test qobj isa IBMQJulia.Qobj
         @test qobj.data isa Dict{String,Any}
-        @test exp isa Array{Dict{String,Any},1}
+        @test exp_1 isa Array{Dict{String,Any},1}
         @test ins isa Array{Any, 1}
         @test length(ins) == i*(i+1)/2
         for j in ins

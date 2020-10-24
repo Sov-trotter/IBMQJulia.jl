@@ -12,13 +12,13 @@ end
 @testset "job" begin
     @test job isa IBMQJulia.Job
     @test job.reg == reg
-    @test job.data == IBMQJulia.generate_inst(qc)
+    @test job.data == IBMQJulia.yaotoqobj([qc], "ibmq_qasm_simulator")
     @test job.data isa IBMQJulia.Qobj
     @test job.jobid isa String
 end
 
 @testset "status" begin
-    @test stat == "COMPLETED"
+    @test stat == "COMPLETED" || stat == "RUNNING"
 end
 
 @testset "result" begin
