@@ -14,6 +14,7 @@ YaoExtensions = "7a06699c-c960-11e9-3c98-9f78548b5f0f"
 [compat]
 HTTP = "0.8"
 JSON = "0.21"
+SimpleMock = "1.1"
 Yao = "0.6"
 YaoBlocks = "0.11"
 julia = "1"
