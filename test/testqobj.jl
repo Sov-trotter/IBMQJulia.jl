@@ -92,6 +92,10 @@ end
     for j in ins
         @test j isa Dict{String,Any} 
     end
+
+    c = chain(3, put(1=>X), put(2=>Y) ,put(3=>Z), 
+                put(2=>T), swap(1,2), put(3=>Ry(0.7)), 
+                control(2, 1=>Y), control(3, 2=>Z))
     inst = generate_inst(c)
     c2 = inst |> inst2qbir
     @test operator_fidelity(c, c2) ≈ 1
