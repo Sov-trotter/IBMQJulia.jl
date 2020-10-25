@@ -27,4 +27,22 @@ end
     @testset "Qobj" begin
         include("testqobj.jl")
     end
+
+    @testset "Single Quibit Unitary Gates" begin
+        @test isunitary(U1(0.5))
+        @test isunitary(U2(0.5, 0.6))
+        @test isunitary(U3(0.5, 0.6, 0.4))
+        u1 = U1(π/2)
+        u2 = U2(π/2, π/6)
+        u3 = U3(π/2, π/6, π/4)
+
+        for fs in [u1, u2, u3]
+            @test eval(YaoBlocks.parse_ex(dump_gate(fs), 1)) == fs
+            @test Yao.iparams_eltype(fs) == Float64 
+        end
+        @test Yao.getiparams(u1) == (π/2) 
+        @test Yao.getiparams(u2) == (π/2, π/6)
+        @test Yao.getiparams(u3) == (π/2, π/6, π/4)
+
+    end
 end
