@@ -62,7 +62,7 @@ end
 
 # rotation gates
 for (GT, NAME, PARAMS, MAXC) in [(:(RotationGate{1, T, XGate} where T), "u3", :([b.theta, -π/2, π/2]), 0),
-                           (:(RotationGate{1, T, YGate} where T), "u2", :([b.theta, 0, 0]), 0),
+                           (:(RotationGate{1, T, YGate} where T), "u3", :([b.theta, 0, 0]), 0),
                            (:(RotationGate{1, T, ZGate} where T), "u1", :([b.theta]), 0),
                            (:(ShiftGate), "u1", :([b.theta]), 1),
                            (:(HGate), "u2", :([0, π]), 0),

@@ -82,7 +82,7 @@ end
     qc = chain(3, put(1=>X), put(2=>Y) ,put(3=>Z), 
                 put(2=>T), swap(1,2), put(3=>Ry(0.7)), 
                 control(2, 1=>Y), control(3, 2=>Z))
-    qobj = IBMQJulia.yaotoqobj([circuit], "foo_device")
+    qobj = IBMQJulia.yaotoqobj([qc], "foo_device")
     exp_1 = qobj.data["experiments"] 
     ins = exp_1[1]["instructions"]
     @test qobj isa IBMQJulia.Qobj
