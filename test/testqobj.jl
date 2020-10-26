@@ -1,8 +1,8 @@
 # https://tutorials.yaoquantum.org/dev/
-using YaoExtensions
+using YaoExtensions, IBMQJulia, Yao, Test
 
 @testset "QFT" begin
-    for i in 1:10
+    for i in [2, 4, 5, 7, 8]
         q = qft_circuit(i)
         qobj = IBMQJulia.yaotoqobj([q], "foo_device")
         exp_1 = qobj.data["experiments"] 
@@ -14,11 +14,12 @@ using YaoExtensions
         @test length(ins) == i*(i+1)/2
         for j in ins
             @test j isa Dict{String, Any} 
-            # test individual blocks here 
-            # use the YaoBlocks.gate count method for verification/a method synonymous to it can be added in this package also
-
         end
     end
+    c = qft_circuit(4)
+    inst = generate_inst(c)
+    c2 = inst |> inst2qbir
+    @test operator_fidelity(c, c2) ≈ 1
 end
 
 @testset "Quantum Circuit Born Machine" begin
@@ -50,12 +51,15 @@ end
     @test ins isa Array{Any,1}
     for j in ins
         @test j isa Dict{String,Any} 
-        # test individual blocks here 
     end
+    c = build_circuit(4, 1, [1=>2, 2=>3, 3=>4])
+    inst = generate_inst(c)
+    c2 = inst |> inst2qbir
+    @test operator_fidelity(c, c2) ≈ 1
 end
 
 @testset "Variational Quantum Eigen Solver" begin
-    for n in 3:10
+    for n in [3, 6, 7, 8, 9]
         circuit = dispatch!(variational_circuit(n, n+1),:random)
         qobj = IBMQJulia.yaotoqobj([circuit], "foo_device")
         exp_1 = qobj.data["experiments"] 
@@ -66,9 +70,33 @@ end
         @test ins isa Array{Any,1}
         for j in ins
             @test j isa Dict{String,Any} 
-            # test individual blocks here 
         end
-        # gatecount(circuit)
     end
+    c = dispatch!(variational_circuit(4, 5), :random)
+    inst = generate_inst(c)
+    c2 = inst |> inst2qbir
+    @test operator_fidelity(c, c2) ≈ 1
 end
 
+@testset "Misc" begin
+    qc = chain(3, put(1=>X), put(2=>Y) ,put(3=>Z), 
+                put(2=>T), swap(1,2), put(3=>Ry(0.7)), 
+                control(2, 1=>Y), control(3, 2=>Z))
+    qobj = IBMQJulia.yaotoqobj([qc], "foo_device")
+    exp_1 = qobj.data["experiments"] 
+    ins = exp_1[1]["instructions"]
+    @test qobj isa IBMQJulia.Qobj
+    @test qobj.data isa Dict{String,Any}
+    @test exp_1 isa Array{Dict{String,Any},1}
+    @test ins isa Array{Any,1}
+    for j in ins
+        @test j isa Dict{String,Any} 
+    end
+
+    c = chain(3, put(1=>X), put(2=>Y) ,put(3=>Z), 
+                put(2=>T), swap(1,2), put(3=>Ry(0.7)), 
+                control(2, 1=>Y), control(3, 2=>Z))
+    inst = generate_inst(c)
+    c2 = inst |> inst2qbir
+    @test operator_fidelity(c, c2) ≈ 1
+end

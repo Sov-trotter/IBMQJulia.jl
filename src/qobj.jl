@@ -1,8 +1,6 @@
-#todo variational gate correction stuff :Done
-# add methods for h and rz conversions 
-# cleanup multiple dispatch
-function yaotoqobj(qc::Array{ChainBlock{N}}, device::String; nshots=1024) where N
-    nslots = 1
+export generate_inst, inst2qbir
+
+function yaotoqobj(qc::Array{<:AbstractBlock{N}}, device::String; nshots=1024, nslots=1) where N
     main_header = Dict("description"=>"Set of Experiments 1", "backend_name" => "$(device)")
     main_config = Dict("shots"=>nshots, "memory_slots"=>nslots, "init_qubits"=> true)
     experiments = collect(generate_experiment(i) for i in qc)
@@ -10,81 +8,116 @@ function yaotoqobj(qc::Array{ChainBlock{N}}, device::String; nshots=1024) where 
     Qobj(data)
 end
 
-function generate_experiment(qc::ChainBlock)
-    qc_simpl = basicstyle(qc)
-    n_qubits = nqubits(qc_simpl)
-    n_classical_reg = 2 
-    nslots=1
+function generate_experiment(qc::AbstractBlock{N}, n_classical_reg=2, nslots=1) where N
     c_label = [["c", i] for i in 0:n_classical_reg-1]
-    q_label = [["q", i] for i in 0:n_qubits-1]
-    exp_inst = generate_inst(qc_simpl)
-    exp_header = Dict("memory_slots"=>nslots, "n_qubits"=>n_qubits, "clbit_labels"=>c_label, "qubit_labels"=>q_label)
+    q_label = [["q", i] for i in 0:N-1]
+    exp_inst = generate_inst(qc)
+    exp_header = Dict("memory_slots"=>nslots, "n_qubits"=>N, "clbit_labels"=>c_label, "qubit_labels"=>q_label)
     experiment = Dict("header"=>exp_header, "config"=>Dict(), "instructions"=>exp_inst)
     return experiment    
 end
 
-function generate_inst(qc_simpl::ChainBlock)
+function generate_inst(qc_simpl::AbstractBlock{N}) where N
     inst = []
-    for block in subblocks(qc_simpl)
-        i = generate_inst(block)
-        if block isa ChainBlock
-            if i isa Array{Array}                             # for nested chains
-                push!(inst, Iterators.flatten(i)...)  #generalize this to loop till we get a Array{Dict} 
-            else
-                append!(inst, i)
-            end
-        else
-            if i isa Array                             # for nested chains
-                append!(inst, i)  
-            else
-                push!(inst, i)
-            end
-        end
-    end
+    generate_inst!(inst, basicstyle(qc_simpl), [0:N-1...], Int[])
     return inst
 end
 
-function generate_inst(blk::PutBlock{N,M}) where {N,M}
-	locs = [blk.locs...]
-	generate_inst(blk.content, locs)
-end
-
-function generate_inst(blk::ControlBlock{N,GT,C}) where {N,GT,C}
-    findfirst(!=(0),blk.ctrl_config) == nothing && error("Inverse Control used in Control gate context") 
-	generate_inst(blk.content, blk.ctrl_locs, blk.locs)
-end
-
-function generate_inst(blk::ChainBlock, locs::Array) 
-    ins = []
-    for sub_blk in subblocks(blk)
-        push!(ins, generate_inst(sub_blk, locs))
+function generate_inst!(inst, qc_simpl::ChainBlock, locs, controls)
+    for block in subblocks(qc_simpl)
+        generate_inst!(inst, block, locs, controls)
     end
-    return ins
+end
+
+function generate_inst!(inst, blk::PutBlock{N,M}, locs, controls) where {N,M}
+    generate_inst!(inst, blk.content, sublocs(blk.locs, locs), controls)
+end
+
+function generate_inst!(inst, blk::ControlBlock{N,GT,C}, locs, controls) where {N,GT,C}
+    any(==(0),blk.ctrl_config) && error("Inverse Control used in Control gate context") 
+    generate_inst!(inst, blk.content, sublocs(blk.locs, locs), [controls..., sublocs(blk.ctrl_locs, locs)...])
+end
+
+function generate_inst!(inst, m::Measure{N}, locs, controls) where N
+    # memory:  List of memory slots in which to store the measurement results (mustbe the same length as qubits).  
+    mlocs = sublocs(m.locations isa AllLocs ? [1:N...] : [m.locations...], locs)
+    (m.operator isa ComputationalBasis) || error("measuring an operator is not supported")
+    (m.postprocess isa NoPostProcess) || error("postprocessing is not supported")
+    (length(controls) == 0) || error("controlled measure is not supported")
+    push!(inst, Dict("name"=>"measure", "qubits"=>mlocs, "memory"=>zeros(length(mlocs))))
 end
 
 # IBMQ Chip only supports ["id", "u1", "u2", "u3", "cx"]
-# Conversions implemented for H, RX, RY, RZ 
-generate_inst(::HGate, locs) = Dict("name"=>"u2", "qubits"=>locs, "params"=>[0, π]) 
-generate_inst(::I2Gate, locs) = Dict("name"=>"id", "qubits"=>locs) 
-generate_inst(::TGate, locs) = Dict("name"=>"t", "qubits"=>locs) 
-generate_inst(::SWAPGate, locs) = Dict("name"=>"swap", "qubits"=>locs) 
-generate_inst(::Measure, locs) = Dict("name"=>"measure", "qubits"=>locs, "memory"=>[0])# memory:  List of memory slots in which to store the measurement results (mustbe the same length as qubits).  
+# x, y, z and control x, y, z, id, t, swap and other primitive gates
+for (GT, NAME, MAXC) in [(:XGate, "x", 2), (:YGate, "y", 2), (:ZGate, "z", 2),
+                         (:I2Gate, "id", 0), (:TGate, "t", 0), (:SWAPGate, "swap", 0)]
+    @eval function generate_inst!(inst, ::$GT, locs, controls)
+        if length(controls) <= $MAXC
+            push!(inst, Dict("name"=>"c"^(length(controls))*$NAME, "qubits"=>[controls..., locs...]))
+        else
+            error("too many control bits!")
+        end
+    end
+end
 
-generate_inst(b::ShiftGate, ctrl_locs, locs) = Dict("name"=>"cu1", "qubits"=>[locs..., ctrl_locs...], "params"=>[b.theta])
+# rotation gates
+for (GT, NAME, PARAMS, MAXC) in [(:(RotationGate{1, T, XGate} where T), "u3", :([b.theta, -π/2, π/2]), 0),
+                           (:(RotationGate{1, T, YGate} where T), "u3", :([b.theta, 0, 0]), 0),
+                           (:(RotationGate{1, T, ZGate} where T), "u1", :([b.theta]), 0),
+                           (:(ShiftGate), "u1", :([b.theta]), 1),
+                           (:(HGate), "u2", :([0, π]), 0),
+                          ]
+    @eval function generate_inst!(inst, b::$GT, locs, controls)
+        if length(controls) <= $MAXC
+            push!(inst, Dict("name"=>"c"^(length(controls))*$NAME, "qubits"=>[controls..., locs...], "params"=>$PARAMS))
+        else
+            error("too many control bits! got $controls (length > $($(MAXC)))")
+        end
+    end
+end
 
-generate_inst(::XGate, locs::Array) = Dict("name"=>"x", "qubits"=>locs)
-generate_inst(::YGate, locs::Array) = Dict("name"=>"y", "qubits"=>locs)
-generate_inst(::ZGate, locs::Array) = Dict("name"=>"z", "qubits"=>locs)
-
-generate_inst(::XGate, ctrl_locs::Tuple, locs::Tuple) = Dict("name"=>"cx", "qubits"=>[ctrl_locs..., locs...])
-generate_inst(::YGate, ctrl_locs::Tuple, locs::Tuple) = Dict("name"=>"cy", "qubits"=>[ctrl_locs..., locs...])
-generate_inst(::ZGate, ctrl_locs::Tuple, locs::Tuple) = Dict("name"=>"cz", "qubits"=>[ctrl_locs..., locs...])
-
-generate_inst(b::RotationGate{1, T, XGate}, locs) where T = Dict("name"=>"u3", "qubits"=>locs, "params"=>[b.theta, -π/2, π/2])
-generate_inst(b::RotationGate{1, T, YGate}, locs) where T = Dict("name"=>"u2", "qubits"=>locs, "params"=>[b.theta, 0, 0])
-generate_inst(b::RotationGate{1, T, ZGate}, locs) where T = Dict("name"=>"u1", "qubits"=>locs, "params"=>[b.theta])
+sublocs(subs, locs) = [locs[i] for i in subs]
 
 function basicstyle(blk::AbstractBlock)
 	YaoBlocks.Optimise.simplify(blk, rules=[YaoBlocks.Optimise.to_basictypes])
 end
 
+function inst2qbir(inst)
+    n = maximum(x->maximum(x["qubits"]), inst) + 1
+    chain(n, map(inst) do x
+        name, locs = x["name"], x["qubits"] .+ 1
+        nc = 0
+        while name[nc+1] == 'c' && nc<length(name)
+            nc += 1
+        end
+        if nc > 0
+            control(n, locs[1:nc], locs[nc+1:end]=>name_index(name[nc+1:end], get(x, "params", nothing)))
+        else
+            put(n, locs=>name_index(name, get(x, "params", nothing)))
+        end
+    end)
+end
+
+function name_index(name, params=nothing)
+    if name == "u1"
+        U1(params...)
+    elseif name == "u2"
+        U2(params...)
+    elseif name == "u3"
+        U3(params...)
+    elseif name == "id"
+        I2
+    elseif name == "x"
+        X
+    elseif name == "y"
+        Y
+    elseif name == "z"
+        Z
+    elseif name == "t"
+        T
+    elseif name == "swap"
+        SWAP
+    else
+        error("gate type `$name` not defined!")
+    end
+end
