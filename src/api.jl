@@ -42,8 +42,7 @@ function authenticate(token::String = "") # todo : save the token
         pipeline_limit = 4,
         retry = false,
         redirect = false)
-
-    url = "https://api.quantum-computing.ibm.com/api/users/loginWithToken"
+    url = "https://auth.quantum-computing.ibm.com/api/users/loginWithToken"
     req = Dict("apiToken" => token)
     print("Logging You in...")
     response = HTTP.post(url, headers, JSON.json(req); conf...)
